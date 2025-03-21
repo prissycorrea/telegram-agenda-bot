@@ -53,13 +53,15 @@ for _, row in df.iterrows():
     horas = row["horas_restantes"]
     compromisso = row["compromisso"]
     data_fmt = row["datahora"].strftime("%d/%m às %H:%M")
+    local = row.get("local", "").strip()
+    local_msg = f"\n📍 Local: {local}" if local else ""
     destinatarios = [d.strip().lower() for d in row.get("destinatarios", "").split(",")]
 
     mensagem = None
     if dias in [7, 5, 3, 1]:
-        mensagem = f"📌 Faltam *{dias} dias* para: *{compromisso}*\n🗓️ {data_fmt}"
+        mensagem = f"📌 Faltam *{dias} dias* para: *{compromisso}*\n🗓️ {data_fmt}{local_msg}"
     elif dias == 0 and 2.5 <= horas <= 3.5:
-        mensagem = f"⏰ Lembrete! Daqui a *3 horas* você tem: *{compromisso}*\n🗓️ {data_fmt}"
+        mensagem = f"⏰ Lembrete! Daqui a *3 horas* você tem: *{compromisso}*\n🗓️ {data_fmt}{local_msg}"
 
     if mensagem:
         if "priscilla" in destinatarios:
