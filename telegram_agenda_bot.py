@@ -91,7 +91,7 @@ for _, row in df.iterrows():
     print("Destinatários normalizados:", destinatarios)
 
     mensagem = None
-    if 1 <= dias <= 7:
+    if 1 <= dias <= 3:
         mensagem = f"📌 Faltam *{dias} dias* para: *{compromisso}*\n🗓️ {data_fmt}{local_msg}{tipo_msg}{prioridade_msg}{obs_msg}"
     elif dias == 0 and 2.5 <= horas <= 3.5:
         mensagem = f"⏰ Lembrete! Daqui a *3 horas* você tem: *{compromisso}*\n🗓️ {data_fmt}{local_msg}{tipo_msg}{prioridade_msg}{obs_msg}"
