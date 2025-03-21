@@ -25,6 +25,25 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ID_PRISCILLA = os.getenv("TELEGRAM_PRISCILLA_ID")
 ID_DANILO = os.getenv("TELEGRAM_DANILO_ID")
 
+# === Emojis por tipo e prioridade ===
+tipo_emojis = {
+    "médico": "🏥",
+    "trabalho": "💼",
+    "pessoal": "👤",
+    "reunião": "📅",
+    "evento": "🎉",
+    "viagem": "✈️",
+    "estudo": "📚",
+    "lazer": "🎡",
+    "outro": "📌"
+}
+
+prioridade_emojis = {
+    "alta": "🔥",
+    "média": "⚠️",
+    "baixa": "🧘"
+}
+
 # === Função de envio ===
 def enviar_telegram(chat_id, msg):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -53,7 +72,18 @@ for _, row in df.iterrows():
     horas = row["horas_restantes"]
     compromisso = row["compromisso"]
     local = row.get("local", "").strip()
+    tipo = row.get("tipo", "outro").strip().lower()
+    prioridade = row.get("prioridade", "").strip().lower()
+    obs = row.get("obs", "").strip()
+
+    emoji_tipo = tipo_emojis.get(tipo, "📌")
+    emoji_prioridade = prioridade_emojis.get(prioridade, "")
+
     local_msg = f"\n📍 Local: {local}" if local else ""
+    tipo_msg = f"\n🏷️ Tipo: {emoji_tipo} {tipo.capitalize()}" if tipo else ""
+    prioridade_msg = f"\n🔺 Prioridade: {emoji_prioridade} {prioridade.capitalize()}" if prioridade else ""
+    obs_msg = f"\n📝 Obs: {obs}" if obs else ""
+
     data_fmt = row["datahora"].strftime("%d/%m às %H:%M")
 
     destinatarios_raw = row.get("destinatarios", "")
@@ -62,9 +92,9 @@ for _, row in df.iterrows():
 
     mensagem = None
     if 1 <= dias <= 7:
-        mensagem = f"📌 Faltam *{dias} dias* para: *{compromisso}*\n🗓️ {data_fmt}{local_msg}"
+        mensagem = f"📌 Faltam *{dias} dias* para: *{compromisso}*\n🗓️ {data_fmt}{local_msg}{tipo_msg}{prioridade_msg}{obs_msg}"
     elif dias == 0 and 2.5 <= horas <= 3.5:
-        mensagem = f"⏰ Lembrete! Daqui a *3 horas* você tem: *{compromisso}*\n🗓️ {data_fmt}{local_msg}"
+        mensagem = f"⏰ Lembrete! Daqui a *3 horas* você tem: *{compromisso}*\n🗓️ {data_fmt}{local_msg}{tipo_msg}{prioridade_msg}{obs_msg}"
 
     if mensagem:
         if "priscilla" in destinatarios:
