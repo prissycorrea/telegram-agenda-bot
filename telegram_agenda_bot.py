@@ -40,6 +40,7 @@ def enviar_telegram(chat_id, msg):
 fuso_brasil = pytz.timezone("America/Sao_Paulo")
 agora = datetime.now(fuso_brasil)
 
+
 df["datahora"] = df.apply(
     lambda row: fuso_brasil.localize(datetime.strptime(f"{row['data']} {row['hora']}", "%Y-%m-%d %H:%M")),
     axis=1
@@ -60,7 +61,7 @@ for _, row in df.iterrows():
     print("Destinatários normalizados:", destinatarios)
 
     mensagem = None
-    if dias in [7, 5, 3, 1]:
+    if 1 <= dias <= 7:
         mensagem = f"📌 Faltam *{dias} dias* para: *{compromisso}*\n🗓️ {data_fmt}{local_msg}"
     elif dias == 0 and 2.5 <= horas <= 3.5:
         mensagem = f"⏰ Lembrete! Daqui a *3 horas* você tem: *{compromisso}*\n🗓️ {data_fmt}{local_msg}"
