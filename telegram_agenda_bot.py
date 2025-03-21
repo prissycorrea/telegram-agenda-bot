@@ -40,7 +40,11 @@ def enviar_telegram(chat_id, msg):
 fuso_brasil = pytz.timezone("America/Sao_Paulo")
 agora = datetime.now(fuso_brasil)
 
-df["datahora"] = df.apply(lambda row: datetime.strptime(f"{row['data']} {row['hora']}", "%Y-%m-%d %H:%M"), axis=1)
+df["datahora"] = df.apply(
+    lambda row: fuso_brasil.localize(datetime.strptime(f"{row['data']} {row['hora']}", "%Y-%m-%d %H:%M")),
+    axis=1
+)
+
 df["dias_restantes"] = df["datahora"].apply(lambda dt: (dt.date() - agora.date()).days)
 df["horas_restantes"] = df["datahora"].apply(lambda dt: (dt - agora).total_seconds() / 3600)
 
