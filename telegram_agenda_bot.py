@@ -44,7 +44,6 @@ df["datahora"] = df.apply(
     lambda row: fuso_brasil.localize(datetime.strptime(f"{row['data']} {row['hora']}", "%Y-%m-%d %H:%M")),
     axis=1
 )
-
 df["dias_restantes"] = df["datahora"].apply(lambda dt: (dt.date() - agora.date()).days)
 df["horas_restantes"] = df["datahora"].apply(lambda dt: (dt - agora).total_seconds() / 3600)
 
@@ -52,10 +51,13 @@ for _, row in df.iterrows():
     dias = row["dias_restantes"]
     horas = row["horas_restantes"]
     compromisso = row["compromisso"]
-    data_fmt = row["datahora"].strftime("%d/%m às %H:%M")
     local = row.get("local", "").strip()
     local_msg = f"\n📍 Local: {local}" if local else ""
-    destinatarios = [d.strip().lower() for d in row.get("destinatarios", "").split(",")]
+    data_fmt = row["datahora"].strftime("%d/%m às %H:%M")
+
+    destinatarios_raw = row.get("destinatarios", "")
+    destinatarios = [d.strip().lower() for d in destinatarios_raw.split(",")]
+    print("Destinatários normalizados:", destinatarios)
 
     mensagem = None
     if dias in [7, 5, 3, 1]:
@@ -65,6 +67,8 @@ for _, row in df.iterrows():
 
     if mensagem:
         if "priscilla" in destinatarios:
+            print("→ Enviando para Priscilla")
             enviar_telegram(ID_PRISCILLA, mensagem)
         if "danilo" in destinatarios:
+            print("→ Enviando para Danilo")
             enviar_telegram(ID_DANILO, mensagem)
