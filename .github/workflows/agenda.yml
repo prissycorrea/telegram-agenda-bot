@@ -1,0 +1,29 @@
+name: Enviar lembretes da agenda
+
+on:
+  schedule:
+    - cron: '0 10 * * *'   # 07h BRT
+    - cron: '0 13 * * *'   # 10h BRT
+    - cron: '0 16 * * *'   # 13h BRT
+    - cron: '0 19 * * *'   # 16h BRT
+  workflow_dispatch:
+
+jobs:
+  lembrete-agenda:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositório
+        uses: actions/checkout@v2
+
+      - name: Instalar dependências
+        run: |
+          pip install pandas gspread oauth2client pytz requests
+
+      - name: Executar bot de agenda
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_PRISCILLA_ID: ${{ secrets.TELEGRAM_PRISCILLA_ID }}
+          TELEGRAM_DANILO_ID: ${{ secrets.TELEGRAM_DANILO_ID }}
+          GSHEETS_CREDENTIALS_JSON: ${{ secrets.GSHEETS_CREDENTIALS_JSON }}
+        run: python telegram_agenda_bot.py
