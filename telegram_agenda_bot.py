@@ -61,18 +61,22 @@ agora = datetime.now(fuso_brasil)
 
 
 def parse_hora_com_flexibilidade(data_str, hora_str):
+    if not data_str:
+        raise ValueError(f"Data vazia!")
+
+    if not hora_str:
+        # Cria um datetime apenas com a data e hora padrão (ex: meia-noite)
+        return fuso_brasil.localize(datetime.strptime(data_str, "%Y-%m-%d"))
+
     formatos = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
     for fmt in formatos:
         try:
             return fuso_brasil.localize(datetime.strptime(f"{data_str} {hora_str}", fmt))
         except ValueError:
             continue
+
     raise ValueError(f"Formato de hora inválido: {hora_str}")
 
-df["datahora"] = df.apply(
-    lambda row: parse_hora_com_flexibilidade(row["data"], row["hora"]),
-    axis=1
-)
 
 df["dias_restantes"] = df["datahora"].apply(lambda dt: (dt.date() - agora.date()).days)
 df["horas_restantes"] = df["datahora"].apply(lambda dt: (dt - agora).total_seconds() / 3600)
@@ -94,7 +98,13 @@ for _, row in df.iterrows():
     prioridade_msg = f"\n🔺 Prioridade: {emoji_prioridade} {prioridade.capitalize()}" if prioridade else ""
     obs_msg = f"\n📝 Obs: {obs}" if obs else ""
 
-    data_fmt = row["datahora"].strftime("%d/%m às %H:%M")
+    # Se a hora original estiver vazia, mostra só a data
+    data_fmt = (
+        row["datahora"].strftime("%d/%m")
+        if not row["hora"]
+        else row["datahora"].strftime("%d/%m às %H:%M")
+    )
+
 
     destinatarios_raw = row.get("destinatarios", "")
     destinatarios = [d.strip().lower() for d in destinatarios_raw.split(",")]
