@@ -59,14 +59,21 @@ def enviar_telegram(chat_id, msg):
 fuso_brasil = pytz.timezone("America/Sao_Paulo")
 agora = datetime.now(fuso_brasil)
 
+# === Parse de data e hora flexível ===
+def parse_datahora_segura(row):
+    data_str = row.get("data", "").strip()
+    hora_str = row.get("hora", "").strip()
 
-def parse_hora_com_flexibilidade(data_str, hora_str):
     if not data_str:
-        raise ValueError(f"Data vazia!")
+        print(f"⚠️ Data vazia no compromisso: {row.get('compromisso', '')}")
+        return None
 
     if not hora_str:
-        # Cria um datetime apenas com a data e hora padrão (ex: meia-noite)
-        return fuso_brasil.localize(datetime.strptime(data_str, "%Y-%m-%d"))
+        try:
+            return fuso_brasil.localize(datetime.strptime(data_str, "%Y-%m-%d"))
+        except Exception as e:
+            print(f"❌ Erro ao converter apenas a data: {data_str} | Erro: {e}")
+            return None
 
     formatos = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
     for fmt in formatos:
@@ -75,12 +82,18 @@ def parse_hora_com_flexibilidade(data_str, hora_str):
         except ValueError:
             continue
 
-    raise ValueError(f"Formato de hora inválido: {hora_str}")
+    print(f"❌ Formato de hora inválido: {hora_str} (linha: {row.get('compromisso', '')})")
+    return None
 
+# Cria a coluna datahora de forma segura
+df["datahora"] = df.apply(parse_datahora_segura, axis=1)
+df = df.dropna(subset=["datahora"])  # Remove linhas sem datahora válida
 
+# Calcula dias e horas restantes
 df["dias_restantes"] = df["datahora"].apply(lambda dt: (dt.date() - agora.date()).days)
 df["horas_restantes"] = df["datahora"].apply(lambda dt: (dt - agora).total_seconds() / 3600)
 
+# Envio de mensagens
 for _, row in df.iterrows():
     dias = row["dias_restantes"]
     horas = row["horas_restantes"]
@@ -101,10 +114,9 @@ for _, row in df.iterrows():
     # Se a hora original estiver vazia, mostra só a data
     data_fmt = (
         row["datahora"].strftime("%d/%m")
-        if not row["hora"]
+        if not row.get("hora")
         else row["datahora"].strftime("%d/%m às %H:%M")
     )
-
 
     destinatarios_raw = row.get("destinatarios", "")
     destinatarios = [d.strip().lower() for d in destinatarios_raw.split(",")]
