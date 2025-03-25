@@ -60,10 +60,20 @@ fuso_brasil = pytz.timezone("America/Sao_Paulo")
 agora = datetime.now(fuso_brasil)
 
 
+def parse_hora_com_flexibilidade(data_str, hora_str):
+    formatos = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
+    for fmt in formatos:
+        try:
+            return fuso_brasil.localize(datetime.strptime(f"{data_str} {hora_str}", fmt))
+        except ValueError:
+            continue
+    raise ValueError(f"Formato de hora inválido: {hora_str}")
+
 df["datahora"] = df.apply(
-    lambda row: fuso_brasil.localize(datetime.strptime(f"{row['data']} {row['hora']}", "%Y-%m-%d %H:%M")),
+    lambda row: parse_hora_com_flexibilidade(row["data"], row["hora"]),
     axis=1
 )
+
 df["dias_restantes"] = df["datahora"].apply(lambda dt: (dt.date() - agora.date()).days)
 df["horas_restantes"] = df["datahora"].apply(lambda dt: (dt - agora).total_seconds() / 3600)
 
