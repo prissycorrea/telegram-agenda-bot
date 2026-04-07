@@ -68,12 +68,30 @@ def parse_datahora_segura(row):
         print(f"⚠️ Data vazia no compromisso: {row.get('compromisso', '')}")
         return None
 
-    if not hora_str:
-        try:
-            return fuso_brasil.localize(datetime.strptime(data_str, "%Y-%m-%d"))
-        except Exception as e:
-            print(f"❌ Erro ao converter apenas a data: {data_str} | Erro: {e}")
-            return None
+   # Se a data estiver vazia ou for "nan", retorna pd.NaT em vez de None
+    if not data_str or data_str.lower() == "nan":
+        return pd.NaT
+
+    try:
+        # Se não tiver hora, tenta converter só a data
+        if not hora_str or hora_str.lower() == "nan":
+            dt = datetime.strptime(data_str, "%Y-%m-%d")
+            return fuso_brasil.localize(dt)
+
+        # Tenta os formatos com hora
+        formatos = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
+        for fmt in formatos:
+            try:
+                dt = datetime.strptime(f"{data_str} {hora_str}", fmt)
+                return fuso_brasil.localize(dt)
+            except ValueError:
+                continue
+                
+        print(f"❌ Formato de hora inválido: {hora_str} (linha: {row.get('compromisso', '')})")
+        return pd.NaT
+    except Exception as e:
+        print(f"❌ Erro na conversão: {e}")
+        return pd.NaT
 
     formatos = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
     for fmt in formatos:
